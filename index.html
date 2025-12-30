@@ -745,7 +745,10 @@ function resetToNew() {
     };
 
     recognition.onresult = (event) => {
-      const cmd = event.results[0][0].transcript.toLowerCase();
+      let cmd = event.results[0][0].transcript.toLowerCase().trim();
+// убираем точку или запятую в конце
+cmd = cmd.replace(/[.,;:!?]$/, "");
+
       console.log("Распознано:", cmd);
 
       if (cmd.includes("найди") || cmd.includes("поиск")) {
