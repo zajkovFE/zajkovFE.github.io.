@@ -166,6 +166,7 @@ input[type="checkbox"].db-check {
         <h4>🤖 ИИ</h4>
         <button class="btn-ai" onclick="openModal('ai-modal')">🤖 ИИ-Ассистент</button>
     </div>
+    
     <div class="tool-group">
         <h4>🎨 Режим</h4>
         <button id="mode-toggle" class="btn-mode" onclick="toggleDesignMode()">🛠️ КОНСТРУКТОР: ВЫКЛ</button>
@@ -175,7 +176,7 @@ input[type="checkbox"].db-check {
         <button class="btn-add" onclick="addNewRow()">➕ Строка</button>
         <button class="btn-add" style="background:#2980b9" onclick="addBoxWithTitle()">📦 Блок</button>
     </div>
-    <div class="tool-group">
+   
     <div class="tool-group">
         <h4>💾 Хранение</h4>
         <button id="btn-save-new" class="btn-save" onclick="startSaveSequence()">📁 В базу браузера</button>
@@ -189,12 +190,14 @@ input[type="checkbox"].db-check {
     <button style="background:#34495e" onclick="document.getElementById('import-file').click()">📥 Импорт HTML</button>
     <input type="file" id="import-file" style="display:none" accept=".html" onchange="importHTML(this)">
 </div>
+        
 <div class="tool-group">
     <h4>📦 База (JSON)</h4>
     <button style="background:#27ae60" onclick="exportFullDB()">📤 Экспорт базы</button>
     <button style="background:#2980b9" onclick="document.getElementById('import-db-file').click()">📥 Импорт базы</button>
     <input type="file" id="import-db-file" style="display:none" accept=".json,application/json,text/plain" onchange="importFullDB(this)">
 </div>
+    
     <div class="tool-group">
         <h4>🖨️ Вывод</h4>
         <button style="background:#e67e22" onclick="window.print()">📄 Печать в PDF</button>
@@ -209,6 +212,7 @@ input[type="checkbox"].db-check {
         <option value="brief">📝 Краткий</option>
     </select>
 </div>
+    
 </div>
 
 <div class="workspace" id="form-canvas">
