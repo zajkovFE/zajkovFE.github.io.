@@ -176,6 +176,15 @@ input[type="checkbox"].db-check {
         <button class="btn-add" style="background:#2980b9" onclick="addBoxWithTitle()">📦 Блок</button>
     </div>
     <div class="tool-group">
+    <h4>📋 Протоколы</h4>
+    <select onchange="applyProtocol(this.value); this.value='';" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+        <option value="">-- Выбрать шаблон --</option>
+        <option value="standart">Стандартная карточка</option>
+        <option value="emergency">Экстренная помощь</option>
+        <option value="brief">Краткая справка</option>
+    </select>
+</div>
+    <div class="tool-group">
         <h4>💾 Хранение</h4>
         <button id="btn-save-new" class="btn-save" onclick="startSaveSequence()">📁 В базу браузера</button>
         <button id="btn-update" onclick="updateExistingRecord()">💾 СОХРАНИТЬ ПРАВКИ</button>
@@ -661,7 +670,63 @@ function importFullDB(input) {
     reader.readAsText(file);
     input.value = '';
 }
+// шаблоны протоколов
+const PROTOCOL_TEMPLATES = {
+    'standart': [
+        { title: '💊 Фармакокинетика', width: '0.48' },
+        { title: '⚙️ Механизм действия', width: '0.48' },
+        { title: '📝 Показания', width: '1.0' },
+        { title: '⚠️ Побочные эффекты', width: '0.48' },
+        { title: '🚫 Противопоказания', width: '0.48' }
+    ],
+    'emergency': [
+        { title: '🚨 Срочные показания', width: '1.0' },
+        { title: '💉 Дозировка (Bolus)', width: '0.48' },
+        { title: '⏱️ Время начала действия', width: '0.48' },
+        { title: '📊 Мониторинг витальных функций', width: '1.0' }
+    ],
+    'brief': [
+        { title: 'Название и Группа', width: '1.0' },
+        { title: 'Краткая схема приема', width: '1.0' }
+    ]
+};
 
+function applyProtocol(type) {
+    if (!confirm("Это очистит текущий проект и создаст новую структуру. Продолжить?")) return;
+    
+    const canvas = document.getElementById('form-canvas');
+    canvas.innerHTML = ''; // Очистка холста
+    
+    const template = PROTOCOL_TEMPLATES[type] || PROTOCOL_TEMPLATES['standart'];
+    
+    // Генерируем блоки согласно шаблону
+    let currentRow = addNewRow(); // Создаем первую строку
+    
+    template.forEach((item, index) => {
+        // Если блок широкий (1.0) или это новый ряд — создаем строку
+        if (item.width === '1.0' && canvas.lastChild.children.length > 0) {
+            currentRow = addNewRow();
+        }
+
+        const newBox = document.createElement('div');
+        newBox.className = 'box';
+        newBox.style.flex = item.width;
+        newBox.innerHTML = `
+            <div class="box-ctrl">
+                <button class="ctrl-btn" onclick="resizeBox(this, 0.1)">↔️</button>
+                <button class="ctrl-btn" style="background:red" onclick="this.closest('.box').remove()">❌</button>
+            </div>
+            <div class="box-title" contenteditable="true">${item.title}</div>
+            <div class="box-content" contenteditable="true"></div>
+        `;
+        currentRow.appendChild(newBox);
+        
+        // Если текущая строка заполнилась широким блоком — следующий будет в новой строке
+        if (item.width === '1.0') {
+            currentRow = addNewRow();
+        }
+    });
+}
 // --- ФУНКЦИИ ДЛЯ РАБОТЫ С HTML-ФАЙЛАМИ ПРОЕКТОВ ---
 function downloadProject() {
     const tempIndex = currentEditingIndex;
