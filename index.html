@@ -705,6 +705,40 @@ function resetToNew() {
         location.reload(); 
     }
 }
+    // функция автозаполнения
+document.getElementById('f-name').addEventListener('input', function(e) {
+    const inputName = e.target.innerText.trim().toLowerCase();
+    if (inputName.length < 3) return; // Ищем, если введено больше 2 букв
+
+    const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+    // Ищем точное или частичное совпадение
+    const found = db.find(item => item.name.toLowerCase().includes(inputName));
+
+    if (found) {
+        // Создаем временную подсказку рядом с полем
+        showAutoFillSuggestion(found);
+    }
+});
+
+function showAutoFillSuggestion(data) {
+    // Если кнопка уже есть, не создаем дубль
+    if (document.getElementById('autofill-btn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'autofill-btn';
+    btn.innerText = `✨ Заполнить из базы (${data.name})`;
+    btn.style = "position: absolute; top: -30px; left: 0; background: #9b59b6; font-size: 10px; z-index: 100;";
+    
+    btn.onclick = () => {
+        document.getElementById('form-canvas').innerHTML = data.html;
+        btn.remove();
+        alert("Данные подтянуты!");
+    };
+
+    document.getElementById('f-name').parentElement.appendChild(btn);
+    // Удаляем кнопку через 5 секунд, если не нажата
+    setTimeout(() => btn.remove(), 5000);
+}
 </script>
     <!-- Подключаем библиотеку annyang -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
@@ -781,6 +815,5 @@ function resetToNew() {
     }
   });
 </script>
-
 </body>
 </html>
