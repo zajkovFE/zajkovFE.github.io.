@@ -68,48 +68,52 @@
 /* Адаптация под мобильные устройства (исправленная) */
 @media screen and (max-width: 768px) {
     .toolbar { 
-        display: flex;
-        flex-direction: row; /* Возвращаем горизонтальное направление */
-        flex-wrap: wrap;    /* Разрешаем перенос на новую строку */
+        display: grid; /* Используем сетку вместо простого flex */
+        grid-template-columns: 1fr 1fr; /* Ровно две колонки */
         gap: 8px;
-        padding: 8px;
+        padding: 10px;
     }
     
     .tool-group { 
-        border-right: none; 
-        border-bottom: 1px solid #eee; 
-        padding-bottom: 10px; 
-        flex: 1 1 45%; /* Группы будут занимать примерно пол-экрана (по две в ряд) */
+        border-right: none !important; 
+        border-bottom: 1px solid #f0f2f5; 
+        padding: 5px !important;
+        margin: 0 !important;
+        width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        justify-content: space-between;
+    }
+
+    /* Первая группа (Протоколы) займет всю ширину, чтобы селектор был удобным */
+    .tool-group:first-child {
+        grid-column: span 2;
     }
 
     .tool-group h4 {
-        font-size: 11px;
-        margin-bottom: 2px;
+        font-size: 10px;
+        margin-bottom: 4px;
+        text-align: center;
     }
 
-    /* Кнопки теперь не на всю высоту, а компактные */
+    /* Кнопки теперь не огромные, а аккуратные */
     button { 
-        padding: 10px 8px !important; 
-        font-size: 13px !important;    
-        width: 100%;                  
-        border-radius: 6px;
+        padding: 12px 5px !important; 
+        font-size: 13px !important; 
+        margin: 2px 0 !important;
+        width: 100% !important;
     }
 
-    /* Селектор шаблонов тоже делаем компактным */
     #protocol-select {
-        height: 38px;
-        font-size: 14px !important;
+        height: 40px;
+        font-size: 15px !important;
         width: 100%;
     }
 
     .workspace { 
-        padding: 15px !important; 
-        margin: 0 auto !important;
+        padding: 5px !important; 
         width: 100% !important;
-        box-sizing: border-box;
+        margin: 0 !important;
     }
 }
     </style>
