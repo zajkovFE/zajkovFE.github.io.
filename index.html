@@ -166,6 +166,14 @@ input[type="checkbox"].db-check {
         <h4>🤖 ИИ</h4>
         <button class="btn-ai" onclick="openModal('ai-modal')">🤖 ИИ-Ассистент</button>
     </div>
+     <h4>📋 Протоколы</h4>
+    <select onchange="applyProtocol(this.value); this.value='';" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+        <option value="">-- Выбрать шаблон --</option>
+        <option value="standart">Стандартная карточка</option>
+        <option value="emergency">Экстренная помощь</option>
+        <option value="brief">Краткая справка</option>
+    </select>
+</div>
     <div class="tool-group">
         <h4>🎨 Режим</h4>
         <button id="mode-toggle" class="btn-mode" onclick="toggleDesignMode()">🛠️ КОНСТРУКТОР: ВЫКЛ</button>
@@ -176,14 +184,6 @@ input[type="checkbox"].db-check {
         <button class="btn-add" style="background:#2980b9" onclick="addBoxWithTitle()">📦 Блок</button>
     </div>
     <div class="tool-group">
-    <h4>📋 Протоколы</h4>
-    <select onchange="applyProtocol(this.value); this.value='';" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
-        <option value="">-- Выбрать шаблон --</option>
-        <option value="standart">Стандартная карточка</option>
-        <option value="emergency">Экстренная помощь</option>
-        <option value="brief">Краткая справка</option>
-    </select>
-</div>
     <div class="tool-group">
         <h4>💾 Хранение</h4>
         <button id="btn-save-new" class="btn-save" onclick="startSaveSequence()">📁 В базу браузера</button>
