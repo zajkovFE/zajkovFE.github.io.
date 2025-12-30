@@ -88,14 +88,6 @@
         color: #7f8c8d;
     }
 
-    /* Стили для селектора шаблонов внутри мобильной группы */
-    #protocol-select {
-        height: 45px; /* Удобно для нажатия пальцем */
-        font-size: 16px !important;
-        width: 100%;
-        border-radius: 8px;
-    }
-
     /* Увеличиваем сами кнопки */
     button { 
         padding: 16px 20px !important; /* Большая область для нажатия */
@@ -118,10 +110,52 @@
         box-sizing: border-box;
     }
 
+    /* Чтобы текст в ячейках тоже было удобно читать и править */
     .box-content {
         font-size: 16px !important;
         min-height: 40px;
     }
+}
+input[type="checkbox"].db-check {
+    transform: scale(1.5); /* Увеличивает саму галочку в 1.5 раза */
+    margin-right: 10px;
+}
+/* Кнопки перемещения строки */
+.row-ctrl {
+    display: none;
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 2px;
+}
+.design-mode .row-ctrl { display: flex; }
+.row-btn {
+    background: #34495e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.row-btn:hover { background: var(--accent); }
+/* Подсветка при перетаскивании */
+.db-group-wrapper[draggable="true"] .db-group-title {
+    cursor: grab;
+    border: 1px dashed var(--accent);
+}
+.db-group-wrapper[draggable="true"] .db-group-title:active {
+    cursor: grabbing;
+    opacity: 0.5;
+}
+/* Отключаем стандартный скролл при зажатии группы в режиме Custom */
+.db-group-wrapper.touch-active {
+    touch-action: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 10000;
 }
     </style>
 </head>
@@ -132,6 +166,16 @@
         <h4>🤖 ИИ</h4>
         <button class="btn-ai" onclick="openModal('ai-modal')">🤖 ИИ-Ассистент</button>
     </div>
+     <div class="tool-group" style="width: 100%; max-width: 200px; border-right: none;">
+    <h4>📋 ШАБЛОНЫ</h4>
+    <select id="protocol-select" onchange="applyProtocol(this.value); this.value='';" 
+            style="padding: 10px; border-radius: 8px; border: 1px solid #3498db;">
+        <option value="">-- Выбрать --</option>
+        <option value="standart">💊 Стандарт</option>
+        <option value="emergency">🚨 Экстренный</option>
+        <option value="brief">📝 Краткий</option>
+    </select>
+</div>
     <div class="tool-group">
         <h4>🎨 Режим</h4>
         <button id="mode-toggle" class="btn-mode" onclick="toggleDesignMode()">🛠️ КОНСТРУКТОР: ВЫКЛ</button>
