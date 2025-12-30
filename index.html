@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Фарма-Архитектор v13.2 (Original + Count)</title>
+<link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkZhcmltYS1BcmNoaXRlY3QiLAogICJzaG9ydF9uYW1lIjogIkZhcmltYSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjBmMmY1IiwKICAidGhlbWVfY29sb3IiOiAiIzJjM2U1MCIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzI4NjQvMjg2NDcwMC5wbmciLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root { 
+            --main-bg: #f0f2f5; --border-color: #000; --accent: #3498db; 
+            --danger: #e74c3c; --success: #27ae60; --ai-color: #9b59b6; --panel-bg: #ffffff;
+            --update-bg: #d35400; --copy-bg: #8e44ad;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--main-bg); padding: 15px; margin-bottom: 50px; }
+
+        .toolbar { 
+            max-width: 1200px; margin: 0 auto 20px; background: var(--panel-bg); padding: 15px; 
+            border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex; flex-wrap: wrap; gap: 15px; position: sticky; top: 10px; z-index: 1000;
+        }
+        .tool-group { border-right: 1px solid #eee; padding-right: 15px; display: flex; flex-direction: column; gap: 5px; }
+        .tool-group:last-child { border: none; }
+        .tool-group h4 { margin: 0 0 5px 0; font-size: 10px; text-transform: uppercase; color: #95a5a6; }
+        
+        button { cursor: pointer; border: none; border-radius: 4px; padding: 7px 12px; font-size: 11px; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-mode { background: #2c3e50; }
+        .btn-ai { background: var(--ai-color); }
+        .btn-add { background: var(--accent); }
+        .btn-save { background: var(--success); }
+        
+        #btn-update { background: var(--update-bg); display: none; }
+        #btn-save-as { background: var(--copy-bg); display: none; }
+
+        .workspace { background: white; max-width: 1050px; margin: 0 auto; padding: 40px; border: 2px solid #000; min-height: 1100px; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.05); }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; min-height: 60px; }
+        .design-mode .form-row { border: 1px dashed #ccc; padding: 5px; }
+
+        .box { border: 1px solid var(--border-color); padding: 10px; position: relative; background: white; display: flex; flex-direction: column; flex: 1; min-width: 50px; }
+        .box-title { font-weight: bold; font-size: 10px; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #eee; }
+        .box-content { flex-grow: 1; min-height: 25px; outline: none; font-size: 13px; line-height: 1.5; }
+
+        .box-ctrl { display: none; position: absolute; top: -25px; right: 0; background: #333; padding: 3px; border-radius: 4px; z-index: 100; gap: 3px; }
+        .design-mode .box-ctrl { display: flex; }
+        .ctrl-btn { background: #555; font-size: 9px; padding: 2px 5px; color: #fff; border: none; cursor: pointer; }
+        .color-pick { width: 24px; height: 18px; border: 1px solid #fff; cursor: pointer; padding: 0; background: none; vertical-align: middle; }
+
+        .db-container { max-width: 1050px; margin: 30px auto; background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+        .db-group-title { background: #ecf0f1; padding: 8px; margin: 10px 0; font-weight: bold; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
+        
+        /* Стиль счетчика */
+        .db-counter { background: var(--accent); color: white; padding: 1px 7px; border-radius: 10px; font-size: 10px; margin-left: auto; margin-right: 10px; }
+
+        .db-item { display: flex; justify-content: space-between; padding: 5px 20px; border-bottom: 1px solid #f9f9f9; align-items: center; font-size: 13px; }
+
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 15px; box-shadow: 0 0 50px rgba(0,0,0,0.5); z-index: 2000; width: 450px; }
+        .modal input, .modal textarea { width: 100%; margin: 10px 0; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
+        .opt-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; padding: 5px; border: 1px inset #f9f9f9; }
+        .opt-btn { background:#f8f9fa; color:#2c3e50; border:1px solid #dee2e6; padding:6px 12px; cursor:pointer; font-size:12px; border-radius:4px; }
+
+      @media print { 
+            .toolbar, .box-ctrl, .ai-modal, .db-container { display: none !important; } 
+            body { background: white; padding: 0; } 
+            .workspace { border: 1px solid #000; width: 100%; max-width: none; box-shadow: none; margin: 0; padding: 10px; } 
+        }
+/* Адаптация под мобильные устройства (усиленная) */
+@media screen and (max-width: 768px) {
+    .toolbar { 
+        flex-direction: column; 
+        gap: 12px;
+        padding: 10px;
+    }
+    
+    .tool-group { 
+        border-right: none; 
+        border-bottom: 2px solid #f0f2f5; 
+        padding-bottom: 15px; 
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* Расстояние между кнопками внутри группы */
+    }
+
+    .tool-group h4 {
+        font-size: 14px; /* Заголовки групп крупнее */
+        margin-bottom: 5px;
+        color: #7f8c8d;
+    }
+
+    /* Увеличиваем сами кнопки */
+    button { 
+        padding: 16px 20px !important; /* Большая область для нажатия */
+        font-size: 16px !important;    /* Крупный текст */
+        width: 100%;                   /* Кнопки на всю ширину экрана */
+        border-radius: 8px;            /* Более мягкие углы */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Увеличиваем кнопки управления внутри блоков (↔️, ❌) */
+    .ctrl-btn {
+        padding: 10px 15px !important;
+        font-size: 18px !important;
+    }
+
+    .workspace { 
+        padding: 10px !important; 
+        margin: 5px !important;
+        width: calc(100% - 10px) !important;
+        box-sizing: border-box;
+    }
+
+    /* Чтобы текст в ячейках тоже было удобно читать и править */
+    .box-content {
+        font-size: 16px !important;
+        min-height: 40px;
+    }
+}
+input[type="checkbox"].db-check {
+    transform: scale(1.5); /* Увеличивает саму галочку в 1.5 раза */
+    margin-right: 10px;
+}
+/* Кнопки перемещения строки */
+.row-ctrl {
+    display: none;
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 2px;
+}
+.design-mode .row-ctrl { display: flex; }
+.row-btn {
+    background: #34495e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.row-btn:hover { background: var(--accent); }
+/* Подсветка при перетаскивании */
+.db-group-wrapper[draggable="true"] .db-group-title {
+    cursor: grab;
+    border: 1px dashed var(--accent);
+}
+.db-group-wrapper[draggable="true"] .db-group-title:active {
+    cursor: grabbing;
+    opacity: 0.5;
+}
+/* Отключаем стандартный скролл при зажатии группы в режиме Custom */
+.db-group-wrapper.touch-active {
+    touch-action: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 10000;
+}
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="tool-group">
+        <h4>🤖 ИИ</h4>
+        <button class="btn-ai" onclick="openModal('ai-modal')">🤖 ИИ-Ассистент</button>
+    </div>
+    <div class="tool-group">
+        <h4>🎨 Режим</h4>
+        <button id="mode-toggle" class="btn-mode" onclick="toggleDesignMode()">🛠️ КОНСТРУКТОР: ВЫКЛ</button>
+    </div>
+    <div class="tool-group">
+        <h4>🧱 Блоки</h4>
+        <button class="btn-add" onclick="addNewRow()">➕ Строка</button>
+        <button class="btn-add" style="background:#2980b9" onclick="addBoxWithTitle()">📦 Блок</button>
+    </div>
+    <div class="tool-group">
+        <h4>💾 Хранение</h4>
+        <button id="btn-save-new" class="btn-save" onclick="startSaveSequence()">📁 В базу браузера</button>
+        <button id="btn-update" onclick="updateExistingRecord()">💾 СОХРАНИТЬ ПРАВКИ</button>
+        <button id="btn-save-as" onclick="startSaveSequence()">📝 КАК НОВЫЙ (КОПИЯ)</button>
+        <button style="background:#95a5a6" onclick="resetToNew()">🆕 Очистить</button>
+        <button style="background:#34495e" onclick="downloadProject()">💾 Скачать .html</button>
+    </div>
+<div class="tool-group">
+    <h4>📂 Файл</h4>
+    <button style="background:#34495e" onclick="document.getElementById('import-file').click()">📥 Импорт HTML</button>
+    <input type="file" id="import-file" style="display:none" accept=".html" onchange="importHTML(this)">
+</div>
+<div class="tool-group">
+    <h4>📦 База (JSON)</h4>
+    <button style="background:#27ae60" onclick="exportFullDB()">📤 Экспорт базы</button>
+    <button style="background:#2980b9" onclick="document.getElementById('import-db-file').click()">📥 Импорт базы</button>
+    <input type="file" id="import-db-file" style="display:none" accept=".json,application/json,text/plain" onchange="importFullDB(this)">
+</div>
+    <div class="tool-group">
+        <h4>🖨️ Вывод</h4>
+        <button style="background:#e67e22" onclick="window.print()">📄 Печать в PDF</button>
+    </div>
+</div>
+
+<div class="workspace" id="form-canvas">
+    <div class="form-row">
+        <div class="box" style="flex: 2;">
+            <div class="box-ctrl">
+                <button class="ctrl-btn" onclick="resizeBox(this, 0.3)">↔️</button>
+                <input type="color" class="color-pick" onchange="this.parentElement.parentElement.style.background=this.value">
+                <button class="ctrl-btn" style="background:red" onclick="this.closest('.box').remove()">❌</button>
+            </div>
+            <div class="box-title" contenteditable="true">Название (RUS/LAT/Торг)</div>
+            <div class="box-content" contenteditable="true" id="f-name"></div>
+        </div>
+        <div class="box">
+            <div class="box-title" contenteditable="true">Синонимы / Группы</div>
+            <div class="box-content" contenteditable="true" id="f-syn"></div>
+        </div>
+    </div>
+</div>
+
+<div class="db-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin:0">📂 Ваша Фарма-База</h3>
+        <button id="btn-bulk-delete" style="background: var(--danger); display: none;" onclick="deleteSelected()">🗑️ Удалить выбранные</button>
+    </div>
+
+    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 12px; color: #666;">Сортировка групп:</span>
+        <select id="db-sort-mode" onchange="renderDB()" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; font-size: 12px; flex: 1;">
+            <option value="date-desc">🕒 По дате (новые сверху)</option>
+            <option value="date-asc">🕓 По дате (старые сверху)</option>
+            <option value="alpha">🔤 По алфавиту (А-Я)</option>
+            <option value="custom">✍️ Произвольно (Drag & Drop)</option>
+        </select>
+    </div>
+
+    <input type="text" id="db-search" placeholder="🔍 Быстрый поиск..." onkeyup="filterDB()" ...>
+    <div id="db-list"></div>
+</div>
+<div class="modal" id="ai-modal">
+    <h3>🤖 ИИ-Ассистент</h3>
+    <input type="text" id="ai-drug" placeholder="Название препарата...">
+    <button class="btn-ai" style="width:100%" onclick="genPrompt()">1. Копировать Промпт</button>
+    <textarea id="ai-import" placeholder="Вставьте JSON ответ от ИИ..."></textarea>
+    <button class="btn-save" style="width:100%" onclick="importAI()">2. Заполнить таблицу</button>
+    <button onclick="closeModal('ai-modal')" style="background:#ccc; color:black; width:100%; margin-top:10px;">Закрыть</button>
+</div>
+
+<div id="save-modal" class="modal">
+    <h3 id="save-step-title">Сохранение</h3>
+    <div id="save-options" class="opt-grid"></div>
+    <input type="text" id="save-custom-input" placeholder="Введите название...">
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn-save" id="save-confirm-btn" style="flex: 1;">Далее</button>
+        <button onclick="closeModal('save-modal')" style="background:#ccc; color:black; flex: 1;">Отмена</button>
+    </div>
+</div>
+
+<script>
+    let isDesign = false;
+    let currentEditingIndex = null;
+    let draggedItem = null;
+    let touchStartY = 0;
+
+    // --- УПРАВЛЕНИЕ РЕЖИМАМИ ---
+    function toggleDesignMode() {
+        isDesign = !isDesign;
+        document.body.classList.toggle('design-mode');
+        document.getElementById('mode-toggle').innerText = isDesign ? "👁️ КОНСТРУКТОР: ВКЛ" : "🛠️ КОНСТРУКТОР: ВЫКЛ";
+    }
+
+    function addNewRow() {
+        const row = document.createElement('div');
+        row.className = 'form-row';
+        row.style.position = 'relative';
+        row.innerHTML = `
+            <div class="row-ctrl">
+                <button class="row-btn" onclick="moveRow(this, 'up')" title="Вверх">▲</button>
+                <button class="row-btn" onclick="moveRow(this, 'down')" title="Вниз">▼</button>
+            </div>
+        `;
+        document.getElementById('form-canvas').appendChild(row);
+        return row;
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+   // --- ЛОГИКА ИИ ---
+    function genPrompt() {
+        const drug = document.getElementById('ai-drug').value || "Препарат";
+        const structure = {};
+        
+        // Собираем структуру полей (сохраняем ваши улучшения с ID)
+        document.querySelectorAll('.box-content').forEach(el => {
+            const title = el.parentElement.querySelector('.box-title').innerText;
+            if (!el.id) el.id = "f-" + Math.random().toString(36).substr(2, 5);
+            structure[el.id] = `данные для "${title}"`;
+        });
+
+        const promptText = `Фармаколог, заполни данные для "${drug}". Верни СТРОГО чистый JSON: ${JSON.stringify(structure)}`;
+        
+        // 1. Резервная запись в поле (как и было)
+        const aiInput = document.getElementById('ai-import');
+        aiInput.value = promptText;
+
+        // 2. Улучшенное авто-копирование (работает на ПК и смартфонах)
+        if (navigator.clipboard && window.isSecureContext) {
+            // Современный способ
+            navigator.clipboard.writeText(promptText).then(() => {
+                alert("Промт АВТОМАТИЧЕСКИ скопирован в буфер! Вставьте его в чат с ИИ.");
+            }).catch(err => {
+                fallbackCopyText(promptText);
+            });
+        } else {
+            // Запасной способ для старых браузеров
+            fallbackCopyText(promptText);
+        }
+    }
+
+    // Вспомогательная функция копирования (резервный механизм)
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert("Промт скопирован в буфер! (через fallback)");
+        } catch (err) {
+            alert("Промт готов в поле ниже. Скопируйте его вручную.");
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function importAI() {
+        try {
+            const data = JSON.parse(document.getElementById('ai-import').value);
+            for (let id in data) { 
+                if(document.getElementById(id)) document.getElementById(id).innerText = data[id]; 
+            }
+            closeModal('ai-modal');
+        } catch (e) { alert("Ошибка JSON. Проверьте, что вставили полный ответ от ИИ."); }
+    }
+
+    // --- ОТРИСОВКА БАЗЫ И СОРТИРОВКА ---
+    function renderDB() {
+        const list = document.getElementById('db-list');
+        const sortMode = document.getElementById('db-sort-mode') ? document.getElementById('db-sort-mode').value : 'date-desc';
+        const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+        list.innerHTML = "";
+        
+        const grouped = db.reduce((acc, item, index) => {
+            if (!acc[item.group]) acc[item.group] = { items: [], lastUpdate: 0 };
+            acc[item.group].items.push({...item, index});
+            acc[item.group].lastUpdate = Math.max(acc[item.group].lastUpdate, item.updatedAt || 0);
+            return acc;
+        }, {});
+
+        let groupsArray = Object.keys(grouped).map(name => ({ name: name, data: grouped[name] }));
+
+        if (sortMode === 'alpha') groupsArray.sort((a, b) => a.name.localeCompare(b.name));
+        else if (sortMode === 'date-desc') groupsArray.sort((a, b) => b.data.lastUpdate - a.data.lastUpdate);
+        else if (sortMode === 'date-asc') groupsArray.sort((a, b) => a.data.lastUpdate - b.data.lastUpdate);
+
+        groupsArray.forEach(groupObj => {
+            let gDiv = document.createElement('div');
+            gDiv.className = 'db-group-wrapper';
+            const isCustom = sortMode === 'custom';
+            
+            gDiv.innerHTML = `
+                <div class="db-group-title" 
+                     draggable="${isCustom}" 
+                     onclick="toggleGroup(this)" 
+                     ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)"
+                     ontouchstart="touchStart(event)" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">
+                    <span>📁 ${groupObj.name}</span>
+                    <span class="db-counter">${groupObj.data.items.length} шт.</span>
+                </div>
+                <div class="db-group-content" style="display:none"></div>`;
+            
+            groupObj.data.items.forEach(item => {
+                const iEl = document.createElement('div');
+                iEl.className = 'db-item';
+                iEl.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" class="db-check" data-index="${item.index}" onclick="event.stopPropagation(); toggleBulkDeleteBtn()">
+                        <span><b>${item.subgroup}:</b> ${item.name}</span>
+                    </div>
+                    <div>
+                        <button style="background:var(--accent)" onclick="loadFromDB(${item.index})">📂</button>
+                        <button style="background:var(--danger)" onclick="deleteFromDB(${item.index})">🗑️</button>
+                    </div>`;
+                gDiv.querySelector('.db-group-content').appendChild(iEl);
+            });
+            list.appendChild(gDiv);
+        });
+        toggleBulkDeleteBtn();
+    }
+
+    function toggleGroup(el) {
+        const content = el.nextElementSibling;
+        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // --- DRAG & DROP (ПК + ТАЧ) ---
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { draggedItem = ev.target.closest('.db-group-wrapper'); }
+    function drop(ev) { 
+        ev.preventDefault();
+        const target = ev.target.closest('.db-group-wrapper');
+        if (target && draggedItem && target !== draggedItem) handleReorder(target);
+    }
+
+    function touchStart(ev) {
+        if (document.getElementById('db-sort-mode').value !== 'custom') return;
+        draggedItem = ev.target.closest('.db-group-wrapper');
+        draggedItem.classList.add('touch-active');
+    }
+    function touchMove(ev) {
+        if (!draggedItem) return;
+        ev.preventDefault();
+        const touch = ev.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetGroup = target ? target.closest('.db-group-wrapper') : null;
+        if (targetGroup && targetGroup !== draggedItem) handleReorder(targetGroup);
+    }
+    function touchEnd() {
+        if (draggedItem) {
+            draggedItem.classList.remove('touch-active');
+            draggedItem = null;
+            saveCustomOrder();
+        }
+    }
+
+    function handleReorder(target) {
+        const list = document.getElementById('db-list');
+        const allNodes = Array.from(list.children);
+        if (allNodes.indexOf(draggedItem) < allNodes.indexOf(target)) target.after(draggedItem);
+        else target.before(draggedItem);
+    }
+
+    function saveCustomOrder() {
+        const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+        const newOrder = [];
+        document.querySelectorAll('.db-group-title span:first-child').forEach(span => {
+            const gName = span.innerText.replace('📁 ', '');
+            newOrder.push(...db.filter(item => item.group === gName));
+        });
+        localStorage.setItem('pharmaDB', JSON.stringify(newOrder));
+    }
+
+    // --- ХРАНЕНИЕ И СОХРАНЕНИЕ ---
+    function updateToolbar() {
+        const isEdit = currentEditingIndex !== null;
+        document.getElementById('btn-save-new').style.display = isEdit ? 'none' : 'inline-block';
+        document.getElementById('btn-update').style.display = isEdit ? 'inline-block' : 'none';
+        document.getElementById('btn-save-as').style.display = isEdit ? 'inline-block' : 'none';
+    }
+
+    function updateExistingRecord() {
+        let db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+        if (confirm("Обновить запись?")) {
+            db[currentEditingIndex].html = document.getElementById('form-canvas').innerHTML;
+            db[currentEditingIndex].name = document.getElementById('f-name').innerText.trim();
+            db[currentEditingIndex].updatedAt = Date.now();
+            localStorage.setItem('pharmaDB', JSON.stringify(db));
+            renderDB();
+            alert("Готово!");
+        }
+    }
+
+    function startSaveSequence() {
+        const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+        let selectedGroup = "";
+        const options = document.getElementById('save-options');
+        const input = document.getElementById('save-custom-input');
+        const confirmBtn = document.getElementById('save-confirm-btn');
+
+        const renderOpts = (list, callback) => {
+            options.innerHTML = "";
+            list.forEach(opt => {
+                const b = document.createElement('button'); b.className = "opt-btn"; b.innerText = opt;
+                b.onclick = () => { input.value = opt; callback(opt); };
+                options.appendChild(b);
+            });
+        };
+
+        const finalize = (sub) => {
+            db.push({
+                name: document.getElementById('f-name').innerText.trim() || 'Без названия',
+                group: selectedGroup, subgroup: sub,
+                html: document.getElementById('form-canvas').innerHTML,
+                updatedAt: Date.now()
+            });
+            localStorage.setItem('pharmaDB', JSON.stringify(db));
+            currentEditingIndex = db.length - 1;
+            renderDB(); updateToolbar(); closeModal('save-modal');
+        };
+
+        const groups = [...new Set(db.map(i => i.group))];
+        renderOpts(groups, (g) => { 
+            selectedGroup = g; 
+            const subs = [...new Set(db.filter(i => i.group === g).map(i => i.subgroup))];
+            renderOpts(subs, (s) => finalize(s));
+            confirmBtn.onclick = () => finalize(input.value);
+        });
+        openModal('save-modal');
+        confirmBtn.onclick = () => { selectedGroup = input.value; renderOpts([], (s)=>finalize(s)); };
+    }
+
+    function loadFromDB(index) {
+        const db = JSON.parse(localStorage.getItem('pharmaDB'));
+        document.getElementById('form-canvas').innerHTML = db[index].html;
+        currentEditingIndex = index;
+        updateToolbar(); window.scrollTo(0,0);
+    }
+
+    function deleteFromDB(index) {
+        if(confirm("Удалить?")) {
+            let db = JSON.parse(localStorage.getItem('pharmaDB'));
+            db.splice(index, 1);
+            localStorage.setItem('pharmaDB', JSON.stringify(db));
+            renderDB();
+        }
+    }
+
+    function filterDB() {
+    const q = document.getElementById('db-search').value.toLowerCase();
+    const groups = document.querySelectorAll('.db-group-wrapper');
+
+    groups.forEach(group => {
+        const items = group.querySelectorAll('.db-item');
+        let hasVisibleItems = false;
+
+        items.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            if (text.includes(q)) {
+                item.style.display = 'flex';
+                hasVisibleItems = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Логика отображения папок
+        const groupContent = group.querySelector('.db-group-content');
+        if (q.length > 0) {
+            if (hasVisibleItems) {
+                group.style.display = 'block';
+                groupContent.style.display = 'block'; // Авто-раскрытие при поиске
+            } else {
+                group.style.display = 'none';
+            }
+        } else {
+            // Если поиск пуст, возвращаем стандартный вид (папки закрыты)
+            group.style.display = 'block';
+            groupContent.style.display = 'none';
+        }
+    });
+}
+    function addBoxWithTitle() {
+        const title = prompt("Заголовок:"); if (!title) return;
+        const row = document.querySelector('.form-row:last-child') || addNewRow();
+        const box = document.createElement('div'); box.className = 'box';
+        box.innerHTML = `<div class="box-ctrl">
+            <button class="ctrl-btn" onclick="resizeBox(this, 0.3)">↔️</button>
+            <input type="color" class="color-pick" onchange="this.parentElement.parentElement.style.background=this.value">
+            <button class="ctrl-btn" style="background:red" onclick="this.closest('.box').remove()">❌</button>
+            </div><div class="box-title" contenteditable="true">${title}</div>
+            <div class="box-content" contenteditable="true" id="f-${Date.now()}"></div>`;
+        row.appendChild(box);
+    }
+
+    function resizeBox(btn, delta) {
+        const box = btn.closest('.box');
+        let f = parseFloat(getComputedStyle(box).flexGrow) || 1;
+        box.style.flexGrow = Math.max(0.2, f + delta);
+    }
+
+    function moveRow(btn, direction) {
+        const row = btn.closest('.form-row');
+        if (direction === 'up' && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+        else if (direction === 'down' && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+    }
+
+    function toggleBulkDeleteBtn() {
+        const count = document.querySelectorAll('.db-check:checked').length;
+        document.getElementById('btn-bulk-delete').style.display = count > 0 ? 'block' : 'none';
+    }
+
+    function deleteSelected() {
+        let db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+        const idxs = Array.from(document.querySelectorAll('.db-check:checked')).map(c => parseInt(c.dataset.index)).sort((a,b)=>b-a);
+        idxs.forEach(i => db.splice(i, 1));
+        localStorage.setItem('pharmaDB', JSON.stringify(db));
+        renderDB();
+    }
+
+    // Запуск при загрузке
+    renderDB();
+// --- ФУНКЦИИ ЭКСПОРТА И ИМПОРТА ВСЕЙ БАЗЫ (JSON) ---
+function exportFullDB() {
+    const db = localStorage.getItem('pharmaDB');
+    if (!db || db === "[]") {
+        alert("База пуста, нечего экспортировать.");
+        return;
+    }
+    const blob = new Blob([db], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pharma_db_backup_${new Date().toLocaleDateString()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+function importFullDB(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (!Array.isArray(importedData)) {
+                alert("Ошибка: Файл имеет неверный формат.");
+                return;
+            }
+
+            let localDB = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+            let addedCount = 0;
+            let updatedCount = 0;
+
+            importedData.forEach(newItem => {
+                // Ищем, есть ли уже такой препарат (совпадение по имени, группе и подгруппе)
+                const existingIndex = localDB.findIndex(item => 
+                    item.name === newItem.name && 
+                    item.group === newItem.group && 
+                    item.subgroup === newItem.subgroup
+                );
+
+                if (existingIndex !== -1) {
+                    // Если нашли дубликат — обновляем его данные
+                    localDB[existingIndex] = newItem;
+                    updatedCount++;
+                } else {
+                    // Если это новый препарат — добавляем в базу
+                    localDB.push(newItem);
+                    addedCount++;
+                }
+            });
+
+            localStorage.setItem('pharmaDB', JSON.stringify(localDB));
+            renderDB();
+            alert(`Импорт завершен!\nДобавлено новых: ${addedCount}\nОбновлено существующих: ${updatedCount}`);
+            
+        } catch (err) {
+            alert("Ошибка при чтении файла: " + err);
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
+}
+
+// --- ФУНКЦИИ ДЛЯ РАБОТЫ С HTML-ФАЙЛАМИ ПРОЕКТОВ ---
+function downloadProject() {
+    const tempIndex = currentEditingIndex;
+    currentEditingIndex = null;
+    updateToolbar();
+
+    const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], {type: 'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (document.getElementById('f-name').innerText.trim() || 'pharma_project') + ".html";
+    a.click();
+
+    currentEditingIndex = tempIndex;
+    updateToolbar();
+}
+
+function importHTML(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(e.target.result, 'text/html');
+        const newContent = doc.getElementById('form-canvas');
+        if (newContent) {
+            document.getElementById('form-canvas').innerHTML = newContent.innerHTML;
+            currentEditingIndex = null;
+            updateToolbar();
+            alert("Проект успешно загружен!");
+        } else {
+            alert("Ошибка: В файле не найден контейнер проекта.");
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
+}
+
+function resetToNew() {
+    if(confirm("Очистить рабочую область?")) {
+        location.reload(); 
+    }
+}
+</script>
+</body>
+</html>
