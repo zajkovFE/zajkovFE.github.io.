@@ -706,7 +706,7 @@ function resetToNew() {
     }
 }
 </script>
-     <script>
+    <script>
 (function() {
   window.addEventListener('DOMContentLoaded', () => {
     const toolbar = document.querySelector('.toolbar');
@@ -744,54 +744,58 @@ function resetToNew() {
       }
     };
 
-   recognition.onresult = (event) => {
-  let cmd = event.results[0][0].transcript.toLowerCase().trim();
-  cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, "");
+    recognition.onresult = (event) => {
+      let cmd = event.results[0][0].transcript.toLowerCase().trim();
+      cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, ""); // убираем лишние знаки в конце
 
-  console.log("Распознано:", cmd);
+      console.log("Распознано:", cmd);
 
-  // Поиск
-  if (cmd.includes("найди") || cmd.includes("поиск")) {
-    const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
-    const searchInput = document.getElementById('db-search');
-    if (searchInput) {
-      searchInput.value = query;
-      if (typeof filterDB === 'function') filterDB();
-      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
+      // Поиск
+      if (cmd.includes("найди") || cmd.includes("поиск")) {
+        const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
+        const searchInput = document.getElementById('db-search');
+        if (searchInput) {
+          searchInput.value = query;
+          if (typeof filterDB === 'function') filterDB();
+          searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
 
-  // Печать
-  if (cmd.includes("печать") || cmd.includes("распечатай")) {
-    window.print();
-  }
+      // Печать
+      if (cmd.includes("печать") || cmd.includes("распечатай")) {
+        window.print();
+      }
 
-  // Очистка
-  if (cmd.includes("очистить") || cmd.includes("сброс") || cmd.includes("новый проект")) {
-    resetToNew();
-  }
+      // Очистка
+      if (cmd.includes("очистить") || cmd.includes("сброс") || cmd.includes("новый проект")) {
+        resetToNew();
+      }
 
-  // Сохранение
-  if (cmd.includes("сохранить") || cmd.includes("запиши") || cmd.includes("в базу")) {
-    startSaveSequence();
-  }
+      // Сохранение
+      if (cmd.includes("сохранить") || cmd.includes("запиши") || cmd.includes("в базу")) {
+        startSaveSequence();
+      }
 
-  // Новая строка
-  if (cmd.includes("новая строка") || cmd.includes("добавь строку")) {
-    addNewRow();
-  }
+      // Новая строка
+      if (cmd.includes("новая строка") || cmd.includes("добавь строку")) {
+        addNewRow();
+      }
 
-  // Новый блок
-  if (cmd.includes("новый блок") || cmd.includes("добавь блок")) {
-    addBoxWithTitle();
-  }
+      // Новый блок
+      if (cmd.includes("новый блок") || cmd.includes("добавь блок")) {
+        addBoxWithTitle();
+      }
 
-  // Режим конструктора
-  if (cmd.includes("режим") || cmd.includes("конструктор")) {
-    toggleDesignMode();
-  }
-};
+      // Режим конструктора
+      if (cmd.includes("режим") || cmd.includes("конструктор")) {
+        toggleDesignMode();
+      }
+    };
 
+    recognition.onend = () => {
+      voiceBtn.style.background = '#2ecc71';
+      voiceBtn.innerHTML = '🎤 ГОЛОС';
+    };
   });
 })();
 </script>
