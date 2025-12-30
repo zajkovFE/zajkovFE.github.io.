@@ -65,97 +65,52 @@
             body { background: white; padding: 0; } 
             .workspace { border: 1px solid #000; width: 100%; max-width: none; box-shadow: none; margin: 0; padding: 10px; } 
         }
-/* Адаптация под мобильные устройства (усиленная) */
+/* Адаптация под мобильные устройства (исправленная) */
 @media screen and (max-width: 768px) {
     .toolbar { 
-        flex-direction: column; 
-        gap: 12px;
-        padding: 10px;
+        display: flex;
+        flex-direction: row; /* Возвращаем горизонтальное направление */
+        flex-wrap: wrap;    /* Разрешаем перенос на новую строку */
+        gap: 8px;
+        padding: 8px;
     }
     
     .tool-group { 
         border-right: none; 
-        border-bottom: 2px solid #f0f2f5; 
-        padding-bottom: 15px; 
+        border-bottom: 1px solid #eee; 
+        padding-bottom: 10px; 
+        flex: 1 1 45%; /* Группы будут занимать примерно пол-экрана (по две в ряд) */
         display: flex;
         flex-direction: column;
-        gap: 8px; /* Расстояние между кнопками внутри группы */
+        gap: 5px;
     }
 
     .tool-group h4 {
-        font-size: 14px; /* Заголовки групп крупнее */
-        margin-bottom: 5px;
-        color: #7f8c8d;
+        font-size: 11px;
+        margin-bottom: 2px;
     }
 
-    /* Увеличиваем сами кнопки */
+    /* Кнопки теперь не на всю высоту, а компактные */
     button { 
-        padding: 16px 20px !important; /* Большая область для нажатия */
-        font-size: 16px !important;    /* Крупный текст */
-        width: 100%;                   /* Кнопки на всю ширину экрана */
-        border-radius: 8px;            /* Более мягкие углы */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 10px 8px !important; 
+        font-size: 13px !important;    
+        width: 100%;                  
+        border-radius: 6px;
     }
 
-    /* Увеличиваем кнопки управления внутри блоков (↔️, ❌) */
-    .ctrl-btn {
-        padding: 10px 15px !important;
-        font-size: 18px !important;
+    /* Селектор шаблонов тоже делаем компактным */
+    #protocol-select {
+        height: 38px;
+        font-size: 14px !important;
+        width: 100%;
     }
 
     .workspace { 
-        padding: 10px !important; 
-        margin: 5px !important;
-        width: calc(100% - 10px) !important;
+        padding: 15px !important; 
+        margin: 0 auto !important;
+        width: 100% !important;
         box-sizing: border-box;
     }
-
-    /* Чтобы текст в ячейках тоже было удобно читать и править */
-    .box-content {
-        font-size: 16px !important;
-        min-height: 40px;
-    }
-}
-input[type="checkbox"].db-check {
-    transform: scale(1.5); /* Увеличивает саму галочку в 1.5 раза */
-    margin-right: 10px;
-}
-/* Кнопки перемещения строки */
-.row-ctrl {
-    display: none;
-    position: absolute;
-    left: -40px;
-    top: 50%;
-    transform: translateY(-50%);
-    flex-direction: column;
-    gap: 2px;
-}
-.design-mode .row-ctrl { display: flex; }
-.row-btn {
-    background: #34495e;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 5px;
-    cursor: pointer;
-    font-size: 12px;
-}
-.row-btn:hover { background: var(--accent); }
-/* Подсветка при перетаскивании */
-.db-group-wrapper[draggable="true"] .db-group-title {
-    cursor: grab;
-    border: 1px dashed var(--accent);
-}
-.db-group-wrapper[draggable="true"] .db-group-title:active {
-    cursor: grabbing;
-    opacity: 0.5;
-}
-/* Отключаем стандартный скролл при зажатии группы в режиме Custom */
-.db-group-wrapper.touch-active {
-    touch-action: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-    z-index: 10000;
 }
     </style>
 </head>
