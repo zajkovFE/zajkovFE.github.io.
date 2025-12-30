@@ -705,39 +705,72 @@ function resetToNew() {
         location.reload(); 
     }
 }
-    // функция автозаполнения
+   // --- ФУНКЦИЯ АВТОЗАПОЛНЕНИЯ (ИСПРАВЛЕННАЯ) ---
 document.getElementById('f-name').addEventListener('input', function(e) {
     const inputName = e.target.innerText.trim().toLowerCase();
-    if (inputName.length < 3) return; // Ищем, если введено больше 2 букв
+    
+    // Удаляем старую кнопку, если пользователь стер текст
+    const oldBtn = document.getElementById('autofill-btn');
+    if (inputName.length < 3) {
+        if (oldBtn) oldBtn.remove();
+        return;
+    }
 
     const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
-    // Ищем точное или частичное совпадение
+    // Ищем точное совпадение по названию
     const found = db.find(item => item.name.toLowerCase().includes(inputName));
 
     if (found) {
-        // Создаем временную подсказку рядом с полем
         showAutoFillSuggestion(found);
+    } else if (oldBtn) {
+        oldBtn.remove();
     }
 });
 
 function showAutoFillSuggestion(data) {
-    // Если кнопка уже есть, не создаем дубль
     if (document.getElementById('autofill-btn')) return;
 
     const btn = document.createElement('button');
     btn.id = 'autofill-btn';
-    btn.innerText = `✨ Заполнить из базы (${data.name})`;
-    btn.style = "position: absolute; top: -30px; left: 0; background: #9b59b6; font-size: 10px; z-index: 100;";
+    btn.innerHTML = `✨ Заполнить: <b>${data.name}</b>`;
     
-    btn.onclick = () => {
-        document.getElementById('form-canvas').innerHTML = data.html;
+    // Стилизуем кнопку так, чтобы она была заметной и не ломала верстку
+    Object.assign(btn.style, {
+        position: 'absolute',
+        top: '-40px',
+        left: '0',
+        background: '#9b59b6',
+        color: 'white',
+        border: 'none',
+        padding: '5px 12px',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        zIndex: '1000',
+        fontSize: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+    });
+    
+    btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Главная фишка: восстанавливаем HTML конструктора из базы
+        if (data.html) {
+            document.getElementById('form-canvas').innerHTML = data.html;
+            // После вставки обновляем название в поле, чтобы оно не осталось старым
+            document.getElementById('f-name').innerText = data.name;
+            alert("Данные подтянуты из базы!");
+        }
         btn.remove();
-        alert("Данные подтянуты!");
     };
 
-    document.getElementById('f-name').parentElement.appendChild(btn);
-    // Удаляем кнопку через 5 секунд, если не нажата
-    setTimeout(() => btn.remove(), 5000);
+    // Чтобы position: absolute сработал правильно, родителю нужен relative
+    const parent = document.getElementById('f-name').parentElement;
+    parent.style.position = 'relative';
+    parent.appendChild(btn);
+
+    // Кнопка исчезнет сама через 7 секунд
+    setTimeout(() => { if (btn) btn.remove(); }, 7000);
 }
 </script>
     <!-- Подключаем библиотеку annyang -->
