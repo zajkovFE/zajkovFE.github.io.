@@ -708,70 +708,66 @@ function resetToNew() {
 </script>
      <script>
 (function() {
-    // 1. Ждем загрузки DOM, чтобы найти панель навигации
-    window.addEventListener('DOMContentLoaded', () => {
-        const toolbar = document.querySelector('.toolbar');
-        if (!toolbar) return;
+  window.addEventListener('DOMContentLoaded', () => {
+    const toolbar = document.querySelector('.toolbar');
+    if (!toolbar) return;
 
-        // Создаем отдельную группу для голоса
-        const voiceGroup = document.createElement('div');
-        voiceGroup.className = 'tool-group';
-        voiceGroup.innerHTML = `
-            <h4>🎙️ Голос</h4>
-            <button id="voice-btn-global" class="btn-ai" style="background: #2ecc71;">🎤 ГОЛОС</button>
-        `;
-        toolbar.appendChild(voiceGroup);
+    const voiceGroup = document.createElement('div');
+    voiceGroup.className = 'tool-group';
+    voiceGroup.innerHTML = `
+      <h4>🎙️ Голос</h4>
+      <button id="voice-btn-global" class="btn-ai" style="background: #2ecc71;">🎤 ГОЛОС</button>
+    `;
+    toolbar.appendChild(voiceGroup);
 
-        const voiceBtn = document.getElementById('voice-btn-global');
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const voiceBtn = document.getElementById('voice-btn-global');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        if (!SpeechRecognition) {
-            voiceBtn.style.opacity = '0.5';
-            voiceBtn.title = "Браузер не поддерживает голос";
-            return;
+    if (!SpeechRecognition) {
+      voiceBtn.style.opacity = '0.5';
+      voiceBtn.title = "Браузер не поддерживает голос";
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.interimResults = false;
+
+    voiceBtn.onclick = () => {
+      try {
+        recognition.start();
+        voiceBtn.style.background = '#e74c3c';
+        voiceBtn.innerHTML = '🔴 СЛУШАЮ';
+      } catch (e) {
+        recognition.stop();
+        console.error(e);
+      }
+    };
+
+    recognition.onresult = (event) => {
+      const cmd = event.results[0][0].transcript.toLowerCase();
+      console.log("Распознано:", cmd);
+
+      if (cmd.includes("найди") || cmd.includes("поиск")) {
+        const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
+        const searchInput = document.getElementById('db-search');
+        if (searchInput) {
+          searchInput.value = query;
+          if (typeof filterDB === 'function') filterDB();
+          searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+      }
 
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'ru-RU';
-        recognition.interimResults = false;
+      if (cmd.includes("печать") || cmd.includes("распечатай")) {
+        window.print();
+      }
+    };
 
-        voiceBtn.onclick = () => {
-            try {
-                recognition.start();
-                voiceBtn.style.background = '#e74c3c';
-                voiceBtn.innerHTML = '🔴 СЛУШАЮ';
-            } catch (e) {
-                recognition.stop();
-            }
-        };
-
-        recognition.onresult = (event) => {
-            const cmd = event.results[0][0].transcript.toLowerCase();
-            console.log("Распознано:", cmd);
-
-            // Команда поиска: "Найди [название]"
-            if (cmd.includes("найди") || cmd.includes("поиск")) {
-                const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
-                const searchInput = document.getElementById('db-search');
-                if (searchInput) {
-                    searchInput.value = query;
-                    // Вызываем вашу функцию фильтрации (строка 336 в вашем файле)
-                    if (typeof filterDB === 'function') filterDB();
-                    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-
-            // Команда печати
-            if (cmd.includes("печать") || cmd.includes("распечатай")) {
-                window.print();
-            }
-        };
-
-        recognition.onend = () => {
-            voiceBtn.style.background = '#2ecc71';
-            voiceBtn.innerHTML = '🎤 ГОЛОС';
-        };
-    });
+    recognition.onend = () => {
+      voiceBtn.style.background = '#2ecc71';
+      voiceBtn.innerHTML = '🎤 ГОЛОС';
+    };
+  });
 })();
 </script>
 </body>
