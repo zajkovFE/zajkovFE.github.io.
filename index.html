@@ -126,22 +126,22 @@
     </style>
 </head>
 <body>
-<div class="toolbar">
-    <div class="tool-group" style="min-width: 160px; flex-shrink: 0;">
-        <h4>📋 ПРОТОКОЛЫ</h4>
-        <select id="protocol-select" onchange="applyProtocol(this.value); this.value='';" 
-                style="width: 100%; padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; background: white;">
-            <option value="">-- Выбрать шаблон --</option>
-            <option value="standart">💊 Стандарт</option>
-            <option value="emergency">🚨 Экстренный</option>
-            <option value="brief">📝 Краткий</option>
-        </select>
-    </div>
+
 <div class="toolbar">
     <div class="tool-group">
         <h4>🤖 ИИ</h4>
         <button class="btn-ai" onclick="openModal('ai-modal')">🤖 ИИ-Ассистент</button>
     </div>
+    <div class="tool-group" style="width: 100%; max-width: 200px; border-right: none;">
+    <h4>📋 ШАБЛОНЫ</h4>
+    <select id="protocol-select" onchange="applyProtocol(this.value); this.value='';" 
+            style="padding: 10px; border-radius: 8px; border: 1px solid #3498db;">
+        <option value="">-- Выбрать --</option>
+        <option value="standart">💊 Стандарт</option>
+        <option value="emergency">🚨 Экстренный</option>
+        <option value="brief">📝 Краткий</option>
+    </select>
+</div>
     <div class="tool-group">
         <h4>🎨 Режим</h4>
         <button id="mode-toggle" class="btn-mode" onclick="toggleDesignMode()">🛠️ КОНСТРУКТОР: ВЫКЛ</button>
