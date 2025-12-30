@@ -706,106 +706,81 @@ function resetToNew() {
     }
 }
 </script>
-    <script>
-(function() {
+    <!-- Подключаем библиотеку annyang -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+<script>
   window.addEventListener('DOMContentLoaded', () => {
     const toolbar = document.querySelector('.toolbar');
     if (!toolbar) return;
 
+    // Добавляем кнопку управления голосом
     const voiceGroup = document.createElement('div');
     voiceGroup.className = 'tool-group';
     voiceGroup.innerHTML = `
       <h4>🎙️ Голос</h4>
-      <button id="voice-btn-global" class="btn-ai" style="background: #2ecc71;">🎤 ГОЛОС</button>
+      <button id="voice-btn-global" class="btn-ai" style="background:#2ecc71;">🎤 ГОЛОС</button>
     `;
     toolbar.appendChild(voiceGroup);
 
     const voiceBtn = document.getElementById('voice-btn-global');
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (annyang) {
+      // Определяем команды
+      const commands = {
+        'найди *query': function(query) {
+          const searchInput = document.getElementById('db-search');
+          if (searchInput) {
+            searchInput.value = query;
+            if (typeof filterDB === 'function') filterDB();
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        },
+        'поиск *query': function(query) {
+          const searchInput = document.getElementById('db-search');
+          if (searchInput) {
+            searchInput.value = query;
+            if (typeof filterDB === 'function') filterDB();
+          }
+        },
+        'печать': function() { window.print(); },
+        'распечатай': function() { window.print(); },
+        'очистить': function() { resetToNew(); },
+        'сброс': function() { resetToNew(); },
+        'сохранить': function() { startSaveSequence(); },
+        'в базу': function() { startSaveSequence(); },
+        'новая строка': function() { addNewRow(); },
+        'добавь строку': function() { addNewRow(); },
+        'новый блок': function() { addBoxWithTitle(); },
+        'добавь блок': function() { addBoxWithTitle(); },
+        'режим': function() { toggleDesignMode(); },
+        'конструктор': function() { toggleDesignMode(); }
+      };
+
+      // Добавляем команды
+      annyang.addCommands(commands);
+      annyang.setLanguage('ru-RU');
+
+      // Кнопка запуска/остановки
+      let isActive = false;
+      voiceBtn.onclick = () => {
+        if (!isActive) {
+          annyang.start();
+          voiceBtn.style.background = '#e74c3c';
+          voiceBtn.innerHTML = '🔴 СЛУШАЮ';
+          isActive = true;
+        } else {
+          annyang.abort();
+          voiceBtn.style.background = '#2ecc71';
+          voiceBtn.innerHTML = '🎤 ГОЛОС';
+          isActive = false;
+        }
+      };
+    } else {
       voiceBtn.style.opacity = '0.5';
-      voiceBtn.title = "Браузер не поддерживает голос";
-      return;
+      voiceBtn.title = "Браузер не поддерживает annyang";
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU';
-    recognition.interimResults = false;
-    recognition.continuous = true; // непрерывное прослушивание
-
-    let isListeningCommands = false;
-
-    voiceBtn.onclick = () => {
-      try {
-        recognition.start();
-        voiceBtn.style.background = '#e74c3c';
-        voiceBtn.innerHTML = '🔴 СЛУШАЮ';
-      } catch (e) {
-        recognition.stop();
-        console.error(e);
-      }
-    };
-
-    const recognition = new SpeechRecognition();
-recognition.lang = 'ru-RU';
-recognition.interimResults = false;
-recognition.continuous = true; // слушаем постоянно
-
-let isListeningCommands = false;
-
-voiceBtn.onclick = () => {
-  try {
-    recognition.start();
-    voiceBtn.style.background = '#e74c3c';
-    voiceBtn.innerHTML = '🔴 СЛУШАЮ';
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-recognition.onresult = (event) => {
-  let cmd = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-  cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, "");
-
-  console.log("Распознано:", cmd);
-
-  // Триггер "окей"
-  if (cmd.includes("окей")) {
-    isListeningCommands = true;
-    console.log("✅ Активирован режим команд");
-    return;
-  }
-
-  if (isListeningCommands) {
-    if (cmd.includes("найди") || cmd.includes("поиск")) {
-      const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
-      const searchInput = document.getElementById('db-search');
-      if (searchInput) {
-        searchInput.value = query;
-        if (typeof filterDB === 'function') filterDB();
-      }
-    }
-    if (cmd.includes("печать") || cmd.includes("распечатай")) window.print();
-    if (cmd.includes("очистить") || cmd.includes("сброс")) resetToNew();
-    if (cmd.includes("сохранить") || cmd.includes("в базу")) startSaveSequence();
-    if (cmd.includes("новая строка")) addNewRow();
-    if (cmd.includes("новый блок")) addBoxWithTitle();
-    if (cmd.includes("режим") || cmd.includes("конструктор")) toggleDesignMode();
-
-    // сброс режима после выполнения
-    isListeningCommands = false;
-    console.log("⏹️ Режим команд завершён");
-  }
-};
-
-recognition.onend = () => {
-  // при окончании — перезапускаем, чтобы слушал дальше
-  recognition.start();
-};
-
   });
-})();
 </script>
+
 </body>
 </html>
