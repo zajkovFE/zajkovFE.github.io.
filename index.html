@@ -750,7 +750,7 @@ function resetToNew() {
 // убираем все точки и лишние пробелы в конце
 cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, "");
       console.log("Распознано:", cmd);
-
+//найди и поиск
       if (cmd.includes("найди") || cmd.includes("поиск")) {
         const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
         const searchInput = document.getElementById('db-search');
@@ -760,12 +760,23 @@ cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, "");
           searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
-
+// печать и распечатай
       if (cmd.includes("печать") || cmd.includes("распечатай")) {
         window.print();
       }
     };
-
+ // Сохранение 
+      if (cmd.includes("сохранить") || cmd.includes("запиши") || cmd.includes("в базу")) 
+      { startSaveSequence(); } 
+      // Новая строка
+      if (cmd.includes("новая строка") || cmd.includes("добавь строку")) 
+      { addNewRow(); } 
+      // Новый блок 
+      if (cmd.includes("новый блок") || cmd.includes("добавь блок")) 
+      { addBoxWithTitle(); } 
+      // Режим конструктора
+      if (cmd.includes("режим") || cmd.includes("конструктор")) 
+      { toggleDesignMode(); } };
     recognition.onend = () => {
       voiceBtn.style.background = '#2ecc71';
       voiceBtn.innerHTML = '🎤 ГОЛОС';
