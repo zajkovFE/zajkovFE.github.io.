@@ -88,6 +88,14 @@
         color: #7f8c8d;
     }
 
+    /* Стили для селектора шаблонов внутри мобильной группы */
+    #protocol-select {
+        height: 45px; /* Удобно для нажатия пальцем */
+        font-size: 16px !important;
+        width: 100%;
+        border-radius: 8px;
+    }
+
     /* Увеличиваем сами кнопки */
     button { 
         padding: 16px 20px !important; /* Большая область для нажатия */
@@ -110,62 +118,22 @@
         box-sizing: border-box;
     }
 
-    /* Чтобы текст в ячейках тоже было удобно читать и править */
     .box-content {
         font-size: 16px !important;
         min-height: 40px;
     }
 }
-input[type="checkbox"].db-check {
-    transform: scale(1.5); /* Увеличивает саму галочку в 1.5 раза */
-    margin-right: 10px;
-}
-/* Кнопки перемещения строки */
-.row-ctrl {
-    display: none;
-    position: absolute;
-    left: -40px;
-    top: 50%;
-    transform: translateY(-50%);
-    flex-direction: column;
-    gap: 2px;
-}
-.design-mode .row-ctrl { display: flex; }
-.row-btn {
-    background: #34495e;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 5px;
-    cursor: pointer;
-    font-size: 12px;
-}
-.row-btn:hover { background: var(--accent); }
-/* Подсветка при перетаскивании */
-.db-group-wrapper[draggable="true"] .db-group-title {
-    cursor: grab;
-    border: 1px dashed var(--accent);
-}
-.db-group-wrapper[draggable="true"] .db-group-title:active {
-    cursor: grabbing;
-    opacity: 0.5;
-}
-/* Отключаем стандартный скролл при зажатии группы в режиме Custom */
-.db-group-wrapper.touch-active {
-    touch-action: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-    z-index: 10000;
-}
     </style>
 </head>
 <body>
- <h4>📋 Протоколы</h4>
-    <select onchange="applyProtocol(this.value); this.value='';" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
-        <option value="">-- Выбрать шаблон --</option>
-        <option value="standart">Стандартная карточка</option>
-        <option value="emergency">Экстренная помощь</option>
-        <option value="brief">Краткая справка</option>
+ <div class="tool-group" style="min-width: 140px; flex-shrink: 0;">
+    <h4>📋 ШАБЛОН</h4>
+    <select id="protocol-select" onchange="applyProtocol(this.value); this.value='';" 
+            style="width: 100%; padding: 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer;">
+        <option value="">-- Выбрать --</option>
+        <option value="standart">💊 Стандарт</option>
+        <option value="emergency">🚨 Экстренный</option>
+        <option value="brief">📝 Краткий</option>
     </select>
 </div>
 <div class="toolbar">
@@ -670,60 +638,54 @@ function importFullDB(input) {
     input.value = '';
 }
 // шаблоны протоколов
-const PROTOCOL_TEMPLATES = {
+const PROTOCOL_DATA = {
     'standart': [
-        { title: '💊 Фармакокинетика', width: '0.48' },
-        { title: '⚙️ Механизм действия', width: '0.48' },
-        { title: '📝 Показания', width: '1.0' },
-        { title: '⚠️ Побочные эффекты', width: '0.48' },
-        { title: '🚫 Противопоказания', width: '0.48' }
+        { t: '💊 Фармакокинетика', w: 1 }, { t: '⚙️ Механизм действия', w: 1 },
+        { t: '📝 Показания', w: 2 },
+        { t: '⚠️ Побочные эффекты', w: 1 }, { t: '🚫 Противопоказания', w: 1 }
     ],
     'emergency': [
-        { title: '🚨 Срочные показания', width: '1.0' },
-        { title: '💉 Дозировка (Bolus)', width: '0.48' },
-        { title: '⏱️ Время начала действия', width: '0.48' },
-        { title: '📊 Мониторинг витальных функций', width: '1.0' }
+        { t: '🚨 ЭКСТРЕННО', w: 2 },
+        { t: '💉 Дозировка', w: 1 }, { t: '⏱️ Время эффекта', w: 1 }
     ],
     'brief': [
-        { title: 'Название и Группа', width: '1.0' },
-        { title: 'Краткая схема приема', width: '1.0' }
+        { t: 'Название и Группа', w: 2 },
+        { t: 'Схема приема', w: 2 }
     ]
 };
 
 function applyProtocol(type) {
-    if (!confirm("Это очистит текущий проект и создаст новую структуру. Продолжить?")) return;
+    if (!type || !confirm("Очистить текущий холст и применить шаблон?")) return;
     
     const canvas = document.getElementById('form-canvas');
-    canvas.innerHTML = ''; // Очистка холста
-    
-    const template = PROTOCOL_TEMPLATES[type] || PROTOCOL_TEMPLATES['standart'];
-    
-    // Генерируем блоки согласно шаблону
-    let currentRow = addNewRow(); // Создаем первую строку
-    
-    template.forEach((item, index) => {
-        // Если блок широкий (1.0) или это новый ряд — создаем строку
-        if (item.width === '1.0' && canvas.lastChild.children.length > 0) {
+    canvas.innerHTML = ''; // Полная очистка
+
+    const items = PROTOCOL_DATA[type];
+    let currentRow = null;
+
+    items.forEach((item, idx) => {
+        // Создаем новую строку, если это первый элемент или элемент с весом 2
+        if (idx === 0 || item.w === 2 || (currentRow && currentRow.children.length >= 2)) {
             currentRow = addNewRow();
         }
 
-        const newBox = document.createElement('div');
-        newBox.className = 'box';
-        newBox.style.flex = item.width;
-        newBox.innerHTML = `
+        const box = document.createElement('div');
+        box.className = 'box';
+        box.style.flex = item.w;
+        
+        // Генерируем ID для совместимости с вашим ИИ
+        const boxId = (idx === 0) ? 'f-name' : 'f-' + Date.now() + idx;
+
+        box.innerHTML = `
             <div class="box-ctrl">
                 <button class="ctrl-btn" onclick="resizeBox(this, 0.1)">↔️</button>
+                <input type="color" class="color-pick" onchange="this.parentElement.parentElement.style.background=this.value">
                 <button class="ctrl-btn" style="background:red" onclick="this.closest('.box').remove()">❌</button>
             </div>
-            <div class="box-title" contenteditable="true">${item.title}</div>
-            <div class="box-content" contenteditable="true"></div>
+            <div class="box-title" contenteditable="true">${item.t}</div>
+            <div class="box-content" contenteditable="true" id="${boxId}"></div>
         `;
-        currentRow.appendChild(newBox);
-        
-        // Если текущая строка заполнилась широким блоком — следующий будет в новой строке
-        if (item.width === '1.0') {
-            currentRow = addNewRow();
-        }
+        currentRow.appendChild(box);
     });
 }
 // --- ФУНКЦИИ ДЛЯ РАБОТЫ С HTML-ФАЙЛАМИ ПРОЕКТОВ ---
