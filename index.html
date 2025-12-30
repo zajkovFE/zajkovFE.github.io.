@@ -747,72 +747,63 @@ function resetToNew() {
       }
     };
 
-    recognition.onresult = (event) => {
-      let cmd = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, ""); // убираем лишние знаки в конце
+    const recognition = new SpeechRecognition();
+recognition.lang = 'ru-RU';
+recognition.interimResults = false;
+recognition.continuous = true; // слушаем постоянно
 
-      console.log("Распознано:", cmd);
+let isListeningCommands = false;
 
-      // Если сказали "окей" — активируем режим команд
-      if (cmd.includes("окей")) {
-        isListeningCommands = true;
-        console.log("✅ Активирован режим команд");
-        return;
+voiceBtn.onclick = () => {
+  try {
+    recognition.start();
+    voiceBtn.style.background = '#e74c3c';
+    voiceBtn.innerHTML = '🔴 СЛУШАЮ';
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+recognition.onresult = (event) => {
+  let cmd = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+  cmd = cmd.replace(/[\s\.\,\;\:\!\?]+$/, "");
+
+  console.log("Распознано:", cmd);
+
+  // Триггер "окей"
+  if (cmd.includes("окей")) {
+    isListeningCommands = true;
+    console.log("✅ Активирован режим команд");
+    return;
+  }
+
+  if (isListeningCommands) {
+    if (cmd.includes("найди") || cmd.includes("поиск")) {
+      const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
+      const searchInput = document.getElementById('db-search');
+      if (searchInput) {
+        searchInput.value = query;
+        if (typeof filterDB === 'function') filterDB();
       }
+    }
+    if (cmd.includes("печать") || cmd.includes("распечатай")) window.print();
+    if (cmd.includes("очистить") || cmd.includes("сброс")) resetToNew();
+    if (cmd.includes("сохранить") || cmd.includes("в базу")) startSaveSequence();
+    if (cmd.includes("новая строка")) addNewRow();
+    if (cmd.includes("новый блок")) addBoxWithTitle();
+    if (cmd.includes("режим") || cmd.includes("конструктор")) toggleDesignMode();
 
-      // Если режим команд активен — выполняем
-      if (isListeningCommands) {
-        // Поиск
-        if (cmd.includes("найди") || cmd.includes("поиск")) {
-          const query = cmd.replace(/(найди|поиск|препарат)/g, "").trim();
-          const searchInput = document.getElementById('db-search');
-          if (searchInput) {
-            searchInput.value = query;
-            if (typeof filterDB === 'function') filterDB();
-            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }
+    // сброс режима после выполнения
+    isListeningCommands = false;
+    console.log("⏹️ Режим команд завершён");
+  }
+};
 
-        // Печать
-        if (cmd.includes("печать") || cmd.includes("распечатай")) {
-          window.print();
-        }
+recognition.onend = () => {
+  // при окончании — перезапускаем, чтобы слушал дальше
+  recognition.start();
+};
 
-        // Очистка
-        if (cmd.includes("очистить") || cmd.includes("сброс") || cmd.includes("новый проект")) {
-          resetToNew();
-        }
-
-        // Сохранение
-        if (cmd.includes("сохранить") || cmd.includes("запиши") || cmd.includes("в базу")) {
-          startSaveSequence();
-        }
-
-        // Новая строка
-        if (cmd.includes("новая строка") || cmd.includes("добавь строку")) {
-          addNewRow();
-        }
-
-        // Новый блок
-        if (cmd.includes("новый блок") || cmd.includes("добавь блок")) {
-          addBoxWithTitle();
-        }
-
-        // Режим конструктора
-        if (cmd.includes("режим") || cmd.includes("конструктор")) {
-          toggleDesignMode();
-        }
-
-        // После выполнения сбрасываем режим
-        isListeningCommands = false;
-        console.log("⏹️ Режим команд завершён");
-      }
-    };
-
-    recognition.onend = () => {
-      voiceBtn.style.background = '#2ecc71';
-      voiceBtn.innerHTML = '🎤 ГОЛОС';
-    };
   });
 })();
 </script>
