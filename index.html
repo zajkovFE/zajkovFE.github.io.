@@ -121,10 +121,11 @@
 <body>
 
 <div class="toolbar">
-    <div class="tool-group">
-        <h4>🤖 ИИ</h4>
-        <button class="btn-ai" onclick="openModal('ai-modal')">🤖 ИИ-Ассистент</button>
-    </div>
+   <div class="tool-group">
+    <h4>🤖 ИИ-АССИСТЕНТ</h4>
+    <button onclick="openModal('ai-manual-modal')" style="background:#34495e">✍️ РУЧНОЙ JSON</button>
+    <button onclick="openModal('ai-gen-modal')" style="background:#9b59b6">✨ ГЕНЕРАТОР (API)</button>
+</div>
     
     <div class="tool-group">
         <h4>🎨 Режим</h4>
@@ -171,6 +172,10 @@
         <option value="brief">📝 Краткий</option>
     </select>
 </div>
+<div class="tool-group">
+    <h4>⚙️ СЕРВИС</h4>
+    <button onclick="manageApiKey()" style="background:#7f8c8d">🔑 Ключ ИИ</button>
+</div>
     
 </div>
 
@@ -191,7 +196,16 @@
         </div>
     </div>
 </div>
-
+<div id="save-modal" class="modal">
+    <h3 id="save-step-title">Сохранение</h3>
+    <div id="save-options" class="opt-grid"></div>
+    <input type="text" id="save-custom-input" placeholder="Введите название...">
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn-save" id="save-confirm-btn" style="flex: 1;">Далее</button>
+        <button onclick="closeModal('save-modal')" style="background:#ccc; color:black; flex: 1;">Отмена</button>
+    </div>
+</div>
+</div>
 <div class="db-container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h3 style="margin:0">📂 Ваша Фарма-База</h3>
@@ -211,23 +225,21 @@
     <input type="text" id="db-search" placeholder="🔍 Быстрый поиск..." onkeyup="filterDB()" ...>
     <div id="db-list"></div>
 </div>
-<div class="modal" id="ai-modal">
-    <h3>🤖 ИИ-Ассистент</h3>
-    <input type="text" id="ai-drug" placeholder="Название препарата...">
-    <button class="btn-ai" style="width:100%" onclick="genPrompt()">1. Копировать Промпт</button>
-    <textarea id="ai-import" placeholder="Вставьте JSON ответ от ИИ..."></textarea>
-    <button class="btn-save" style="width:100%" onclick="importAI()">2. Заполнить таблицу</button>
-    <button onclick="closeModal('ai-modal')" style="background:#ccc; color:black; width:100%; margin-top:10px;">Закрыть</button>
+<div class="modal" id="ai-manual-modal">
+    <h3>✍️ Ручной ИИ (JSON)</h3>
+    <input type="text" id="ai-drug-manual" placeholder="Название препарата...">
+    <button class="btn-ai" style="width:100%; background:#34495e" onclick="genManualPrompt()">1. Копировать Промпт</button>
+    <textarea id="ai-import-manual" placeholder="Вставьте JSON ответ от ИИ сюда..."></textarea>
+    <button class="btn-save" style="width:100%" onclick="importManualAI()">2. Заполнить таблицу</button>
+    <button onclick="closeModal('ai-manual-modal')" style="background:#ccc; color:black; width:100%; margin-top:10px;">Закрыть</button>
 </div>
 
-<div id="save-modal" class="modal">
-    <h3 id="save-step-title">Сохранение</h3>
-    <div id="save-options" class="opt-grid"></div>
-    <input type="text" id="save-custom-input" placeholder="Введите название...">
-    <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="btn-save" id="save-confirm-btn" style="flex: 1;">Далее</button>
-        <button onclick="closeModal('save-modal')" style="background:#ccc; color:black; flex: 1;">Отмена</button>
-    </div>
+<div class="modal" id="ai-gen-modal">
+    <h3>✨ Генеративный ИИ (API)</h3>
+    <p style="font-size: 11px; color: #666;">Использует ключ из раздела СЕРВИС</p>
+    <button class="btn-ai" style="width:100%; margin-bottom:10px;" onclick="aiDirectCreate()">📋 Создать структуру</button>
+    <button class="btn-ai" style="width:100%; background:#8e44ad;" onclick="aiDirectFill()">✍️ Заполнить текущую</button>
+    <button onclick="closeModal('ai-gen-modal')" style="background:#ccc; color:black; width:100%; margin-top:10px;">Закрыть</button>
 </div>
 
 <script>
@@ -261,61 +273,64 @@
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
    // --- ЛОГИКА ИИ ---
-    function genPrompt() {
-        const drug = document.getElementById('ai-drug').value || "Препарат";
-        const structure = {};
-        
-        // Собираем структуру полей (сохраняем ваши улучшения с ID)
-        document.querySelectorAll('.box-content').forEach(el => {
-            const title = el.parentElement.querySelector('.box-title').innerText;
-            if (!el.id) el.id = "f-" + Math.random().toString(36).substr(2, 5);
-            structure[el.id] = `данные для "${title}"`;
+    // --- ВЕТКА 1: РУЧНОЙ JSON (БЕЗ ИЗМЕНЕНИЙ ЛОГИКИ) ---
+function genManualPrompt() {
+    const drug = document.getElementById('ai-drug-manual').value || "Препарат";
+    const titles = Array.from(document.querySelectorAll('.box-title')).map(t => t.innerText);
+    const promptText = `Действуй как фармаколог. Заполни данные для "${drug}" по разделам: ${titles.join(', ')}. Верни ТОЛЬКО чистый JSON объект: {"Заголовок": "текст"}.`;
+    navigator.clipboard.writeText(promptText);
+    alert("Промпт для JSON режима скопирован!");
+}
+
+function importManualAI() {
+    try {
+        const val = document.getElementById('ai-import-manual').value.replace(/```json|```/g, "").trim();
+        const data = JSON.parse(val);
+        Object.keys(data).forEach(title => {
+            const box = Array.from(document.querySelectorAll('.box')).find(b => b.querySelector('.box-title').innerText === title);
+            if (box) box.querySelector('.box-content').innerText = data[title];
         });
+        closeModal('ai-manual-modal');
+    } catch (e) { alert("Ошибка JSON! Проверьте формат ответа."); }
+}
 
-        const promptText = `Фармаколог, заполни данные для "${drug}". Верни СТРОГО чистый JSON: ${JSON.stringify(structure)}`;
-        
-        // 1. Резервная запись в поле (как и было)
-        const aiInput = document.getElementById('ai-import');
-        aiInput.value = promptText;
+// --- ВЕТКА 2: ГЕНЕРАТИВНЫЙ API (ИСПОЛЬЗУЕТ ГОТОВЫЙ КЛЮЧ) ---
+async function callGeminiDirect(text) {
+    const API_KEY = localStorage.getItem('gemini_api_key'); // Берем готовый ключ
+    if (!API_KEY) { alert("Сначала введите API Ключ в СЕРВИСЕ!"); return null; }
 
-        // 2. Улучшенное авто-копирование (работает на ПК и смартфонах)
-        if (navigator.clipboard && window.isSecureContext) {
-            // Современный способ
-            navigator.clipboard.writeText(promptText).then(() => {
-                alert("Промт АВТОМАТИЧЕСКИ скопирован в буфер! Вставьте его в чат с ИИ.");
-            }).catch(err => {
-                fallbackCopyText(promptText);
-            });
-        } else {
-            // Запасной способ для старых браузеров
-            fallbackCopyText(promptText);
-        }
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+        });
+        const data = await resp.json();
+        const raw = data.candidates[0].content.parts[0].text;
+        return JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch (e) { alert("Ошибка API. Проверьте ключ."); return null; }
+}
+
+async function aiDirectCreate() {
+    const q = prompt("Какую структуру создать?");
+    if (!q) return;
+    const res = await callGeminiDirect(`Создай JSON структуру для препарата: "${q}". Массив объектов [{"t": "Заголовок", "w": 1 или 2}].`);
+    if (res) renderStructure(res); 
+}
+
+async function aiDirectFill() {
+    const drug = prompt("Введите название препарата для автозаполнения:");
+    if (!drug) return;
+    const titles = Array.from(document.querySelectorAll('.box-title')).map(t => t.innerText);
+    const res = await callGeminiDirect(`Заполни данные для "${drug}" по разделам: ${titles.join(', ')}. Верни JSON: {"Заголовок": "текст"}.`);
+    if (res) {
+        Object.keys(res).forEach(title => {
+            const box = Array.from(document.querySelectorAll('.box')).find(b => b.querySelector('.box-title').innerText === title);
+            if (box) box.querySelector('.box-content').innerText = res[title];
+        });
     }
-
-    // Вспомогательная функция копирования (резервный механизм)
-    function fallbackCopyText(text) {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            alert("Промт скопирован в буфер! (через fallback)");
-        } catch (err) {
-            alert("Промт готов в поле ниже. Скопируйте его вручную.");
-        }
-        document.body.removeChild(textArea);
-    }
-
-    function importAI() {
-        try {
-            const data = JSON.parse(document.getElementById('ai-import').value);
-            for (let id in data) { 
-                if(document.getElementById(id)) document.getElementById(id).innerText = data[id]; 
-            }
-            closeModal('ai-modal');
-        } catch (e) { alert("Ошибка JSON. Проверьте, что вставили полный ответ от ИИ."); }
-    }
+}
 
     // --- ОТРИСОВКА БАЗЫ И СОРТИРОВКА ---
     function renderDB() {
@@ -424,33 +439,40 @@
         localStorage.setItem('pharmaDB', JSON.stringify(newOrder));
     }
 
-    // --- ХРАНЕНИЕ И СОХРАНЕНИЕ ---
-    function updateToolbar() {
-        const isEdit = currentEditingIndex !== null;
-        document.getElementById('btn-save-new').style.display = isEdit ? 'none' : 'inline-block';
-        document.getElementById('btn-update').style.display = isEdit ? 'inline-block' : 'none';
-        document.getElementById('btn-save-as').style.display = isEdit ? 'inline-block' : 'none';
+    // Логика ХРАНЕНИя И СОХРАНЕНИя ---
+
+function updateToolbar() {
+        const btnNew = document.getElementById('btn-save-new');
+        const btnUpd = document.getElementById('btn-update');
+        const btnAs = document.getElementById('btn-save-as');
+        if (currentEditingIndex !== null) {
+            btnNew.style.display = 'none'; btnUpd.style.display = 'inline-block'; btnAs.style.display = 'inline-block';
+        } else {
+            btnNew.style.display = 'inline-block'; btnUpd.style.display = 'none'; btnAs.style.display = 'none';
+        }
     }
 
     function updateExistingRecord() {
-        let db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
-        if (confirm("Обновить запись?")) {
+        const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
+        if (confirm(`Обновить текущую запись?`)) {
             db[currentEditingIndex].html = document.getElementById('form-canvas').innerHTML;
-            db[currentEditingIndex].name = document.getElementById('f-name').innerText.trim();
-            db[currentEditingIndex].updatedAt = Date.now();
+            db[currentEditingIndex].name = document.getElementById('f-name').innerText.trim() || 'Без названия';
             localStorage.setItem('pharmaDB', JSON.stringify(db));
             renderDB();
-            alert("Готово!");
+            alert("Обновлено!");
         }
     }
 
     function startSaveSequence() {
         const db = JSON.parse(localStorage.getItem('pharmaDB') || '[]');
         let selectedGroup = "";
+        const title = document.getElementById('save-step-title');
         const options = document.getElementById('save-options');
         const input = document.getElementById('save-custom-input');
         const confirmBtn = document.getElementById('save-confirm-btn');
 
+        title.innerText = "Выберите Группу";
+        const groups = [...new Set(db.map(item => item.group))];
         const renderOpts = (list, callback) => {
             options.innerHTML = "";
             list.forEach(opt => {
@@ -464,24 +486,25 @@
             db.push({
                 name: document.getElementById('f-name').innerText.trim() || 'Без названия',
                 group: selectedGroup, subgroup: sub,
-                html: document.getElementById('form-canvas').innerHTML,
-                updatedAt: Date.now()
+                html: document.getElementById('form-canvas').innerHTML
             });
             localStorage.setItem('pharmaDB', JSON.stringify(db));
             currentEditingIndex = db.length - 1;
-            renderDB(); updateToolbar(); closeModal('save-modal');
+            updateToolbar(); renderDB(); closeModal('save-modal');
         };
 
-        const groups = [...new Set(db.map(i => i.group))];
-        renderOpts(groups, (g) => { 
-            selectedGroup = g; 
-            const subs = [...new Set(db.filter(i => i.group === g).map(i => i.subgroup))];
-            renderOpts(subs, (s) => finalize(s));
-            confirmBtn.onclick = () => finalize(input.value);
-        });
+        const askSub = () => {
+            title.innerText = "Выберите Подгруппу"; input.value = "";
+            const subs = [...new Set(db.filter(i => i.group === selectedGroup).map(i => i.subgroup))];
+            renderOpts(subs, (val) => finalize(val));
+            confirmBtn.onclick = () => finalize(input.value.trim());
+        };
+
+        renderOpts(groups, (val) => { selectedGroup = val; askSub(); });
         openModal('save-modal');
-        confirmBtn.onclick = () => { selectedGroup = input.value; renderOpts([], (s)=>finalize(s)); };
+        confirmBtn.onclick = () => { selectedGroup = input.value.trim(); if(selectedGroup) askSub(); };
     }
+
 
     function loadFromDB(index) {
         const db = JSON.parse(localStorage.getItem('pharmaDB'));
@@ -795,6 +818,45 @@ function applyProtocol(type) {
         `;
         currentRow.appendChild(box);
     });
+}
+
+// сервис групп настройка
+function manageApiKey() {
+    const currentKey = localStorage.getItem('gemini_api_key') || "";
+    const newKey = prompt("Введите ваш личный API Key от Google AI Studio (сохранится только в этом браузере):", currentKey);
+    
+    if (newKey !== null) {
+        localStorage.setItem('gemini_api_key', newKey.trim());
+        alert("Ключ сохранен! Теперь ИИ готов к работе.");
+    }
+}
+
+// Модифицируем функцию вызова ИИ, чтобы она брала ключ из хранилища
+async function callGemini(text) {
+    const API_KEY = localStorage.getItem('gemini_api_key');
+    
+    if (!API_KEY) {
+        alert("Сначала введите API ключ через кнопку '🔑 Ключ ИИ'");
+        manageApiKey();
+        return null;
+    }
+
+    try {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+        });
+        
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error.message);
+        
+        const raw = data.candidates[0].content.parts[0].text;
+        return JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch (e) {
+        alert("Ошибка ИИ: " + e.message);
+        return null;
+    }
 }
 </script>
     <!-- Подключаем библиотеку annyang -->
