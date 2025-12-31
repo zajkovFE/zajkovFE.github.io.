@@ -117,6 +117,7 @@
     }
 }
     </style>
+<script src="https://unpkg.com/ai@2.2.35/dist/index.umd.js"></script>
 </head>
 <body>
 
@@ -237,8 +238,15 @@
 <div class="modal" id="ai-gen-modal">
     <h3>✨ Генеративный ИИ (API)</h3>
     <p style="font-size: 11px; color: #666;">Использует ключ из раздела СЕРВИС</p>
-    <button class="btn-ai" style="width:100%; margin-bottom:10px;" onclick="aiDirectCreate()">📋 Создать структуру</button>
-    <button class="btn-ai" style="width:100%; background:#8e44ad;" onclick="aiDirectFill()">✍️ Заполнить текущую</button>
+    
+    <button class="btn-ai" style="width:100%; margin-bottom:10px;" onclick="aiDirectCreate()">
+        📋 Создать структуру (Архитектор)
+    </button>
+    
+    <button class="btn-ai" style="width:100%; background:#8e44ad;" onclick="aiDirectFill()">
+        ✍️ Заполнить текущую (Клинический редактор)
+    </button>
+    
     <button onclick="closeModal('ai-gen-modal')" style="background:#ccc; color:black; width:100%; margin-top:10px;">Закрыть</button>
 </div>
 
@@ -295,41 +303,71 @@ function importManualAI() {
 }
 
 // --- ВЕТКА 2: ГЕНЕРАТИВНЫЙ API (ИСПОЛЬЗУЕТ ГОТОВЫЙ КЛЮЧ) ---
-async function callGeminiDirect(text) {
-    const API_KEY = localStorage.getItem('gemini_api_key'); // Берем готовый ключ
-    if (!API_KEY) { alert("Сначала введите API Ключ в СЕРВИСЕ!"); return null; }
+// --- ЕДИНЫЙ ДВИЖОК ЗАПРОСОВ ---
+async function fetchGeminiSDK(promptText, role) {
+    const KEY = localStorage.getItem('gemini_api_key')?.trim();
+    if (!KEY) return alert("Ключ API не найден! Проверьте раздел СЕРВИС.");
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const roles = {
+        architect: "Ты — медицинский архитектор. Составь структуру документа. Верни ТОЛЬКО JSON массив объектов: [{'t': 'Заголовок', 'w': 1 или 2}].",
+        editor: "Ты — врач-клиницист. Заполни разделы. Верни ТОЛЬКО JSON объект: {'Заголовок': 'текст'}."
+    };
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+
     try {
-        const resp = await fetch(url, {
+        const response = await fetch(url, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: `${roles[role]}\n\nЗапрос: ${promptText}` }] }],
+                generationConfig: { 
+                    temperature: 0.1, 
+                    responseMimeType: "application/json" 
+                }
+            })
         });
-        const data = await resp.json();
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+
         const raw = data.candidates[0].content.parts[0].text;
         return JSON.parse(raw.replace(/```json|```/g, "").trim());
-    } catch (e) { alert("Ошибка API. Проверьте ключ."); return null; }
+    } catch (e) {
+        console.error("SDK Error:", e);
+        alert("Ошибка ИИ: " + e.message);
+        return null;
+    }
 }
 
+// --- ВАШИ КНОПКИ (ТЕПЕРЬ ОНИ БУДУТ ВИДИМЫ ДЛЯ HTML) ---
 async function aiDirectCreate() {
-    const q = prompt("Какую структуру создать?");
-    if (!q) return;
-    const res = await callGeminiDirect(`Создай JSON структуру для препарата: "${q}". Массив объектов [{"t": "Заголовок", "w": 1 или 2}].`);
-    if (res) renderStructure(res); 
+    const topic = prompt("Какую структуру создать? (напр. История болезни: Гастрит)");
+    if (!topic) return;
+    
+    const res = await fetchGeminiSDK(topic, 'architect');
+    if (res && typeof renderStructure === 'function') {
+        renderStructure(res); // Используем вашу функцию отрисовки
+    }
+    closeModal('ai-gen-modal');
 }
 
 async function aiDirectFill() {
-    const drug = prompt("Введите название препарата для автозаполнения:");
-    if (!drug) return;
+    const context = prompt("Введите данные (препарат или симптомы):");
+    if (!context) return;
+
     const titles = Array.from(document.querySelectorAll('.box-title')).map(t => t.innerText);
-    const res = await callGeminiDirect(`Заполни данные для "${drug}" по разделам: ${titles.join(', ')}. Верни JSON: {"Заголовок": "текст"}.`);
+    const query = `Заполни эти разделы: ${titles.join(', ')}. Контекст: ${context}`;
+
+    const res = await fetchGeminiSDK(query, 'editor');
     if (res) {
         Object.keys(res).forEach(title => {
-            const box = Array.from(document.querySelectorAll('.box')).find(b => b.querySelector('.box-title').innerText === title);
+            const box = Array.from(document.querySelectorAll('.box'))
+                .find(b => b.querySelector('.box-title').innerText === title);
             if (box) box.querySelector('.box-content').innerText = res[title];
         });
     }
+    closeModal('ai-gen-modal');
 }
 
     // --- ОТРИСОВКА БАЗЫ И СОРТИРОВКА ---
